@@ -1,6 +1,13 @@
-class AppConstants {
-  static const String appName = "Book Library";
-  static const String baseUrl = "https://api.example.com";
-  static const String hiveBoxBooks = "booksBox";
-  static const int apiTimeout = 15000; // in ms
-}
+const englishLanguage = 'assets/language/en.json';
+const tamilLanguage = 'assets/language/ta.json';
+
+const splashIcon = 'assets/icons/library_splash.svg';
+
+const userDbKey = 'userDbKey';
+const bookDbKey = 'bookDbKey';
+const pageLimit = 20;
+
+const seenOnboarding = 'seenOnboarding';
+
+const androidStore = '';
+const iosStore = '';

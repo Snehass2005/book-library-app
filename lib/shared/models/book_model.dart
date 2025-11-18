@@ -1,0 +1,65 @@
+import 'package:hive/hive.dart';
+
+part 'book_model.g.dart';
+
+@HiveType(typeId: 0)
+class BookModel extends HiveObject {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String title;
+
+  @HiveField(2)
+  final String author;
+
+  @HiveField(3)
+  final String description;
+
+  @HiveField(4)
+  final String coverUrl;
+
+  @HiveField(5)
+  final String category;
+
+  BookModel({
+    required this.id,
+    required this.title,
+    required this.author,
+    required this.description,
+    required this.coverUrl,
+    required this.category,
+  });
+
+  // ✅ Place your fromJson here
+  factory BookModel.fromJson(Map<String, dynamic> json) {
+    final info = json['volumeInfo'] ?? {};
+    return BookModel(
+      id: json['id'] ?? '',
+      title: info['title'] ?? '',
+      author: (info['authors'] as List?)?.join(', ') ?? '',
+      description: info['description'] ?? '',
+      coverUrl: info['imageLinks']?['thumbnail'] ?? '',
+      category: (info['categories'] as List?)?.first ?? 'Uncategorized',
+    );
+  }
+
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'author': author,
+    'description': description,
+    'coverUrl': coverUrl,
+    'category': category,
+  };
+
+  BookModel toEntity() => BookModel(
+    id: id,
+    title: title,
+    author: author,
+    description: description,
+    coverUrl: coverUrl,
+    category: category,
+  );
+}

@@ -1,0 +1,16 @@
+{
+  "SESSION_EXPIRED": "Your session has expired. Please log in again.",
+  "NO_INTERNET": "No internet connection detected.",
+  "ALERT": "Alert",
+  "CLOSE": "Close",
+  "BOOK_LIBRARY": "Book Library",
+  "ADD_BOOK": "Add Book",
+  "TITLE": "Title",
+  "AUTHOR": "Author",
+  "DESCRIPTION": "Description",
+  "COVER_URL": "Cover URL",
+  "SUBMIT": "Submit",
+  "LOGIN": "Login",
+  "LOGOUT": "Logout",
+  "WELCOME": "Welcome to Book Library"
+}
