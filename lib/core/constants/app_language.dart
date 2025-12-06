@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:book_library_app/core/constants/constants.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get_navigation/src/root/internacionalization.dart';
 
+import 'package:book_library_app/core/constants/constants.dart';
 
 class AppTranslations extends Translations {
   final Map<String, Map<String, String>> translations;
@@ -14,17 +14,11 @@ class AppTranslations extends Translations {
 }
 
 Future<Map<String, Map<String, String>>> loadTranslations() async {
-  try {
-    final enJson = await rootBundle.loadString(englishLanguage );
-    final enMap = json.decode(enJson) as Map<String, dynamic>;
+  String enJson = await rootBundle.loadString(englishLanguage);
 
-    return {
-      'en': Map<String, String>.from(enMap),
-    };
-  } catch (e) {
-    print('❌ Error loading English translations: $e');
-    return {
-      'en': {},
-    };
-  }
+  Map<String, dynamic> enMap = json.decode(enJson);
+
+  return {
+    'en': Map<String, String>.from(enMap)
+  };
 }

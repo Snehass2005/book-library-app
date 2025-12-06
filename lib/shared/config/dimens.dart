@@ -16,14 +16,16 @@ class Dimens {
   static const double spacing_8 = 8.0;
   static const double spacing_12 = 12.0;
   static const double spacing_16 = 16.0;
+  static const double spacing_18 = 18.0;   // ✅ added
   static const double spacing_20 = 20.0;
   static const double spacing_24 = 24.0;
   static const double spacing_32 = 32.0;
+  static const double spacing_36 = 36.0;   // ✅ added
   static const double spacing_40 = 40.0;
   static const double spacing_48 = 48.0;
   static const double spacing_56 = 56.0;
-  static const double spacing_64 = 64.0;
   static const double spacing_60 = 60.0;
+  static const double spacing_64 = 64.0;
   static const double spacing_90 = 90.0;
 
   // 🔹 Font sizes
@@ -49,6 +51,4 @@ class Dimens {
   static const double elevation_1 = 1.0;
   static const double elevation_2 = 2.0;
   static const double elevation_4 = 4.0;
-
-
 }

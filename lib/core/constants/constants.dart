@@ -1,5 +1,5 @@
-const englishLanguage = 'assets/language/en.json';
-const tamilLanguage = 'assets/language/ta.json';
+const String englishLanguage = 'assets/language/en.json';
+
 
 const splashIcon = 'assets/icons/library_splash.svg';
 

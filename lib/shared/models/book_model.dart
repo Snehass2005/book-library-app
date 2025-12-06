@@ -31,7 +31,6 @@ class BookModel extends HiveObject {
     required this.category,
   });
 
-  // ✅ Place your fromJson here
   factory BookModel.fromJson(Map<String, dynamic> json) {
     final info = json['volumeInfo'] ?? {};
     return BookModel(
@@ -39,11 +38,12 @@ class BookModel extends HiveObject {
       title: info['title'] ?? '',
       author: (info['authors'] as List?)?.join(', ') ?? '',
       description: info['description'] ?? '',
-      coverUrl: info['imageLinks']?['thumbnail'] ?? '',
+      coverUrl: info['imageLinks']?['thumbnail']
+          ?? info['imageLinks']?['smallThumbnail']
+          ?? '',
       category: (info['categories'] as List?)?.first ?? 'Uncategorized',
     );
   }
-
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -54,12 +54,12 @@ class BookModel extends HiveObject {
     'category': category,
   };
 
-  BookModel toEntity() => BookModel(
-    id: id,
-    title: title,
-    author: author,
-    description: description,
-    coverUrl: coverUrl,
-    category: category,
-  );
+  // Equality based on id so Set/dedup works
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is BookModel && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

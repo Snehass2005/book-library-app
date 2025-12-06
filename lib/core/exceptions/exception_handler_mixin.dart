@@ -81,6 +81,6 @@ mixin ExceptionHandlerMixin {
   void logout() async {
     await _hiveService.clear();
     userPreferences.clearPreferences();
-    navigatorKey.currentState?.context.go(AppRoutes.login);
+    navigatorKey.currentState?.context.go(RoutesName.defaultPath);
   }
 }
