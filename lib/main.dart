@@ -26,8 +26,13 @@ Future<void> mainCommon(AppEnvironment environment) async {
   await init();
 
   // ✅ Initialize Hive via DI
-  await injector<HiveService>().init();
+  final hive = injector<HiveService>();
+  await hive.init();
 
-  // ✅ Launch app
+// ✅ Seed sample books if empty
+  await seedSampleBooks(hive);
+
+
+  // ✅ Launch appMicrosoft.QuickAction.Bluetooth
   runApp(MyApp(languageConfig: translations));
 }

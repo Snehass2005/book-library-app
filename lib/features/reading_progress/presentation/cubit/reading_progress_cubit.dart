@@ -1,26 +1,20 @@
 import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/core/network/model/either.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
-import 'package:book_library_app/core/utils/configuration.dart';
 import 'package:book_library_app/features/reading_progress/data/models/reading_progress_model.dart';
 import 'package:book_library_app/features/reading_progress/domain/usecases/reading_progress_usecases.dart';
 import 'package:equatable/equatable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get_utils/get_utils.dart';
 import 'package:get_it/get_it.dart';
-import 'package:book_library_app/features/reading_progress/data/models/reading_progress_model.dart';
 
 part 'reading_progress_state.dart';
 
 class ReadingProgressCubit extends Cubit<ReadingProgressState> {
   final ReadingProgressUseCases _useCases;
   final HiveService _hiveService;
-  final NetworkService _networkService;
 
   ReadingProgressCubit(this._useCases)
       : _hiveService = GetIt.instance<HiveService>(),
-        _networkService = GetIt.instance<NetworkService>(),
         super(const ReadingProgressLoaded());
 
   /// ✅ Load progress for a given book and user
@@ -72,7 +66,7 @@ class ReadingProgressCubit extends Cubit<ReadingProgressState> {
         },
             (_) {
           // ✅ Persist progress locally in Hive
-              _hiveService.set('${progress.userId}-${progress.bookId}', progress.page);
+          _hiveService.set('${progress.userId}-${progress.bookId}', progress.page);
           emit(ReadingProgressSaved(progress));
         },
       );

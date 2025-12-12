@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:book_library_app/features/reading_progress/domain/models/reading_progress_model.dart' hide ReadingProgressModel;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:book_library_app/core/constants/constants.dart';
 import 'package:book_library_app/core/database/storage_services.dart';
 import 'package:book_library_app/shared/models/user_data.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
+import 'package:book_library_app/features/reading_progress/data/models/reading_progress_model.dart';
 
 class HiveService implements StorageService {
   Box? box;
@@ -14,13 +16,17 @@ class HiveService implements StorageService {
   Future<void> init() async {
     await Hive.initFlutter();
 
-    // Register adapter if not already registered
+    // Register adapters if not already registered
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(BookModelAdapter());
     }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(ReadingProgressModelAdapter());
+    }
 
-    // Open typed book box and a generic app box
+    // Open typed boxes
     await Hive.openBox<BookModel>('books');
+    await Hive.openBox<ReadingProgressModel>('progress_box');
     final genericBox = await Hive.openBox('bookLibraryBox');
 
     initCompleter.complete(genericBox);
@@ -77,30 +83,38 @@ class HiveService implements StorageService {
     return UserData.fromJson(userJson);
   }
 
-  // Typed book box accessor
+  // --- Books Box ---
   Box<BookModel> get bookBox => Hive.box<BookModel>('books');
 
-  /// Replace entire book list (intentional replacement)
   @override
   Future<bool> setBooks(List<BookModel> books) async {
     final box = bookBox;
     await box.clear();
     if (books.isNotEmpty) {
-      // Add BookModel instances directly
       await box.addAll(books);
     }
     return true;
   }
 
-  /// Return all books
   @override
   Future<List<BookModel>> getBooks() async {
     return bookBox.values.toList();
   }
 
-  /// Add a single book
   Future<bool> addBook(BookModel book) async {
     try {
+      // ✅ Ensure coverUrl is not empty
+      if (book.coverUrl.isEmpty || !book.coverUrl.startsWith('http')) {
+        book = BookModel(
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          description: book.description,
+          coverUrl: 'https://covers.openlibrary.org/b/id/10523338-L.jpg', // fallback image
+          category: book.category,
+        );
+      }
+
       await bookBox.add(book);
       return true;
     } catch (_) {
@@ -108,7 +122,6 @@ class HiveService implements StorageService {
     }
   }
 
-  /// Update an existing book by id (returns true if updated)
   Future<bool> updateBook(BookModel book) async {
     try {
       final values = bookBox.values.toList();
@@ -121,7 +134,6 @@ class HiveService implements StorageService {
     }
   }
 
-  /// Delete a book by id (returns true if deleted)
   Future<bool> deleteBook(String id) async {
     try {
       final values = bookBox.values.toList();
@@ -134,12 +146,60 @@ class HiveService implements StorageService {
     }
   }
 
-  /// Get single book by id
   Future<BookModel?> getBookById(String id) async {
     try {
       return bookBox.values.firstWhere((book) => book.id == id);
     } catch (_) {
       return null;
+    }
+  }
+
+  // --- Reading Progress Box ---
+  Box<ReadingProgressModel> get progressBox =>
+      Hive.box<ReadingProgressModel>('progress_box');
+
+  Future<List<ReadingProgressModel>> getProgress() async {
+    return progressBox.values.toList();
+  }
+
+  Future<void> setProgress(List<ReadingProgressModel> progressList) async {
+    await progressBox.clear();
+    if (progressList.isNotEmpty) {
+      await progressBox.addAll(progressList);
+    }
+  }
+}
+Future<void> seedSampleBooks(HiveService hiveService) async {
+  if (hiveService.bookBox.isEmpty) {
+    final sampleBooks = [
+      BookModel(
+        id: '1',
+        title: 'Flutter for Beginners',
+        author: 'Sneha',
+        description: 'Intro to Flutter development',
+        coverUrl: 'https://picsum.photos/200/300',
+        category: 'Computers',
+      ),
+      BookModel(
+        id: '2',
+        title: 'The Great Gatsby',
+        author: 'F. Scott Fitzgerald',
+        description: 'Classic novel',
+        coverUrl: 'https://covers.openlibrary.org/b/id/7222246-L.jpg',
+        category: 'Fiction',
+      ),
+      BookModel(
+        id: '3',
+        title: 'Data Science Handbook',
+        author: 'Jake VanderPlas',
+        description: 'Guide to data science tools',
+        coverUrl: 'https://covers.openlibrary.org/b/id/8231856-L.jpg',
+        category: 'Technology',
+      ),
+    ];
+
+    for (final book in sampleBooks) {
+      await hiveService.addBook(book);
     }
   }
 }

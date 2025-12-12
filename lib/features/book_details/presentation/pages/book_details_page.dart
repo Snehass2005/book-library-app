@@ -111,14 +111,16 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 Center(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(Dimens.radius_12),
-                    child: Image.network(
+                    child: book.coverUrl.isNotEmpty && book.coverUrl.startsWith('http')
+                        ? Image.network(
                       book.coverUrl,
                       width: 160,
                       height: 240,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) =>
                       const Icon(Icons.broken_image, size: 80),
-                    ),
+                    )
+                        : const Icon(Icons.book, size: 80),
                   ),
                 ),
                 const SizedBox(height: Dimens.spacing_16),

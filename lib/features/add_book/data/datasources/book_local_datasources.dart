@@ -3,11 +3,11 @@ import 'package:book_library_app/core/exceptions/http_exception.dart';
 import 'package:book_library_app/core/network/model/either.dart';
 import 'package:book_library_app/core/database/hive_storage_services.dart';
 
+/// Local datasource for managing books in Hive.
+/// Only supports fetching all books and adding a new book.
 abstract class BookLocalDataSource {
   Future<Either<AppException, List<BookModel>>> getAllBooks();
   Future<Either<AppException, void>> addBook({required BookModel book});
-  Future<Either<AppException, void>> updateBook({required BookModel book});
-  Future<Either<AppException, void>> deleteBook({required String id});
 }
 
 class BookLocalDataSourceImpl implements BookLocalDataSource {
@@ -34,6 +34,18 @@ class BookLocalDataSourceImpl implements BookLocalDataSource {
   @override
   Future<Either<AppException, void>> addBook({required BookModel book}) async {
     try {
+      // ✅ Ensure coverUrl is valid before saving
+      if (book.coverUrl.isEmpty || !book.coverUrl.startsWith('http')) {
+        book = BookModel(
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          description: book.description,
+          coverUrl: 'https://covers.openlibrary.org/b/id/10523338-L.jpg', // fallback image
+          category: book.category,
+        );
+      }
+
       final ok = await hiveService.addBook(book);
       if (!ok) {
         return Left(AppException(
@@ -49,52 +61,6 @@ class BookLocalDataSourceImpl implements BookLocalDataSource {
           message: 'Failed to add book',
           statusCode: 1,
           identifier: '${e.toString()}\nBookLocalDataSource.addBook',
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<Either<AppException, void>> updateBook({required BookModel book}) async {
-    try {
-      final ok = await hiveService.updateBook(book);
-      if (!ok) {
-        return Left(AppException(
-          message: 'Book not found',
-          statusCode: 404,
-          identifier: 'BookLocalDataSource.updateBook',
-        ));
-      }
-      return const Right(null);
-    } catch (e) {
-      return Left(
-        AppException(
-          message: 'Failed to update book',
-          statusCode: 1,
-          identifier: '${e.toString()}\nBookLocalDataSource.updateBook',
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<Either<AppException, void>> deleteBook({required String id}) async {
-    try {
-      final ok = await hiveService.deleteBook(id);
-      if (!ok) {
-        return Left(AppException(
-          message: 'Book not found',
-          statusCode: 404,
-          identifier: 'BookLocalDataSource.deleteBook',
-        ));
-      }
-      return const Right(null);
-    } catch (e) {
-      return Left(
-        AppException(
-          message: 'Failed to delete book',
-          statusCode: 1,
-          identifier: '${e.toString()}\nBookLocalDataSource.deleteBook',
         ),
       );
     }

@@ -1,9 +1,7 @@
 import 'dart:developer';
-
-import 'package:book_library_app/core/constants/endpoints.dart';
 import 'package:book_library_app/core/exceptions/http_exception.dart';
 import 'package:book_library_app/core/network/model/either.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
+import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
 
 abstract class BookListDataSource {
@@ -13,77 +11,39 @@ abstract class BookListDataSource {
 }
 
 class BookListDataSourceImpl implements BookListDataSource {
-  final NetworkService networkService;
+  final HiveService hiveService;
 
-  BookListDataSourceImpl(this.networkService);
+  BookListDataSourceImpl(this.hiveService);
 
   @override
   Future<Either<AppException, List<BookModel>>> fetchBooks() async {
     try {
-      // Use a query that always returns results
-      final fullUrl = ApiEndpoint.searchBooks("flutter");
-      final eitherType = await networkService.get(fullUrl);
-
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          final data = response.data;
-          if (data is Map<String, dynamic> && data['items'] is List) {
-            final items = data['items'] as List;
-            final books = items.map((e) {
-              try {
-                return BookModel.fromJson(e);
-              } catch (_) {
-                return null;
-              }
-            }).whereType<BookModel>().toList();
-
-            return Right(books);
-          }
-          return const Right([]);
-        },
-      );
+      final books = await hiveService.getBooks();
+      log("📦 Hive Books fetched: ${books.length}");
+      return Right(books);
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to load books',
         statusCode: 1,
         identifier: '${e.toString()}\nBookListDataSource.fetchBooks',
       ));
     }
   }
+
   @override
   Future<Either<AppException, List<BookModel>>> searchBooks(String query) async {
     try {
-      // ✅ Use the correct Google Books search endpoint
-      final fullUrl = ApiEndpoint.searchBooks(query);
-
-      final eitherType = await networkService.get(fullUrl);
-
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          final data = response.data;
-          log("📡 API response: ${data.toString()}");
-
-          if (data is Map<String, dynamic> && data['items'] is List) {
-            final items = data['items'] as List;
-            final books = items.map((e) {
-              try {
-                return BookModel.fromJson(e);
-              } catch (_) {
-                return null;
-              }
-            }).whereType<BookModel>().toList();
-            log("📚 Parsed books count: ${books.length}");
-
-            return Right(books);
-          }
-          return const Right([]);
-        },
-      );
+      final books = await hiveService.getBooks();
+      final results = books
+          .where((b) =>
+      b.title.toLowerCase().contains(query.toLowerCase()) ||
+          b.author.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      log("📦 Hive Search results: ${results.length}");
+      return Right(results);
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to search books',
         statusCode: 1,
         identifier: '${e.toString()}\nBookListDataSource.searchBooks',
       ));
@@ -93,18 +53,14 @@ class BookListDataSourceImpl implements BookListDataSource {
   @override
   Future<Either<AppException, void>> deleteBook(String bookId) async {
     try {
-      // ✅ Use the relative path for your private/local API
-      final relativePath = ApiEndpoint.deleteBook;
-
-      final eitherType = await networkService.delete(relativePath);
-
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (_) => const Right(null),
-      );
+      final success = await hiveService.deleteBook(bookId);
+      if (success) {
+        log("📦 Hive Book deleted: $bookId");
+      }
+      return const Right(null);
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to delete book',
         statusCode: 1,
         identifier: '${e.toString()}\nBookListDataSource.deleteBook',
       ));

@@ -24,8 +24,7 @@ class _BookListPageState extends State<BookListPage> {
   @override
   void initState() {
     super.initState();
-    final useCases = injector<BookListUseCases>();
-    _bookListCubit = BookListCubit(useCases)..loadBooks();
+    _bookListCubit = BookListCubit()..loadBooks();
   }
 
   @override
@@ -45,10 +44,6 @@ class _BookListPageState extends State<BookListPage> {
           backgroundColor: AppColors.colorSecondary,
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () => _bookListCubit.refreshBooks(),
-            ),
-            IconButton(
               icon: const Icon(Icons.search),
               onPressed: () => context.push('/book-search', extra: widget.currentUserId),
             ),
@@ -66,7 +61,11 @@ class _BookListPageState extends State<BookListPage> {
               return const Center(child: CircularProgressIndicator());
             } else if (state is BookListSuccess) {
               if (state.books.isEmpty) return const Center(child: Text('No books found'));
-              return _buildBookList(state.books);
+              return RefreshIndicator(
+                onRefresh: () => _bookListCubit.refreshBooks(),
+                child: _buildBookList(state.books),
+              );
+
             } else if (state is BookListError) {
               final books = state.books;
               if (books.isNotEmpty) return _buildBookList(books);

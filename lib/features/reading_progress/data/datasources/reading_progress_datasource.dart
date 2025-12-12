@@ -1,7 +1,7 @@
-import 'package:book_library_app/core/constants/endpoints.dart';
+import 'dart:developer';
 import 'package:book_library_app/core/exceptions/http_exception.dart';
 import 'package:book_library_app/core/network/model/either.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
+import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/features/reading_progress/data/models/reading_progress_model.dart';
 
 abstract class ReadingProgressDataSource {
@@ -16,9 +16,9 @@ abstract class ReadingProgressDataSource {
 }
 
 class ReadingProgressDataSourceImpl implements ReadingProgressDataSource {
-  final NetworkService networkService;
+  final HiveService hiveService;
 
-  ReadingProgressDataSourceImpl(this.networkService);
+  ReadingProgressDataSourceImpl(this.hiveService);
 
   @override
   Future<Either<AppException, ReadingProgressModel>> getProgress({
@@ -26,25 +26,19 @@ class ReadingProgressDataSourceImpl implements ReadingProgressDataSource {
     required String userId,
   }) async {
     try {
-      final eitherType =
-      await networkService.get(ApiEndpoint.getProgress(bookId, userId));
-
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          final progress =
-          ReadingProgressModel.fromJson(response.data as Map<String, dynamic>);
-          return Right(progress);
-        },
+      final progressList = await hiveService.getProgress();
+      final progress = progressList.firstWhere(
+            (p) => p.bookId == bookId && p.userId == userId,
+        orElse: () => ReadingProgressModel.empty(), // ✅ safe fallback
       );
+      log("📦 Hive Progress loaded for bookId=$bookId, userId=$userId");
+      return Right(progress);
     } catch (e) {
-      return Left(
-        AppException(
-          message: 'Unknown error occurred',
-          statusCode: 1,
-          identifier: '${e.toString()}\nReadingProgressDataSource.getProgress',
-        ),
-      );
+      return Left(AppException(
+        message: 'Failed to load progress',
+        statusCode: 1,
+        identifier: '${e.toString()}\nReadingProgressDataSource.getProgress',
+      ));
     }
   }
 
@@ -53,23 +47,21 @@ class ReadingProgressDataSourceImpl implements ReadingProgressDataSource {
     required ReadingProgressModel progress,
   }) async {
     try {
-      final eitherType = await networkService.post(
-        ApiEndpoint.submitProgress(progress.bookId),
-        data: progress.toJson(),
-      );
+      final progressList = await hiveService.getProgress();
+      // Replace existing entry if found
+      progressList.removeWhere(
+              (p) => p.bookId == progress.bookId && p.userId == progress.userId);
+      progressList.add(progress);
+      await hiveService.setProgress(progressList);
 
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (_) => const Right(null),
-      );
+      log("📦 Hive Progress saved for bookId=${progress.bookId}, userId=${progress.userId}");
+      return const Right(null);
     } catch (e) {
-      return Left(
-        AppException(
-          message: 'Unknown error occurred',
-          statusCode: 1,
-          identifier: '${e.toString()}\nReadingProgressDataSource.submitProgress',
-        ),
-      );
+      return Left(AppException(
+        message: 'Failed to save progress',
+        statusCode: 1,
+        identifier: '${e.toString()}\nReadingProgressDataSource.submitProgress',
+      ));
     }
   }
 }

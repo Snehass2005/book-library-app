@@ -1,8 +1,7 @@
 import 'dart:developer';
-import 'package:book_library_app/core/constants/endpoints.dart';
 import 'package:book_library_app/core/exceptions/http_exception.dart';
 import 'package:book_library_app/core/network/model/either.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
+import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/features/book_details/data/models/rating_model.dart';
 import 'package:book_library_app/features/book_details/data/models/recommendation_model.dart';
 import 'package:book_library_app/features/book_details/data/models/reveiw_model.dart';
@@ -16,24 +15,23 @@ abstract class BookDetailsDataSource {
 }
 
 class BookDetailsDataSourceImpl implements BookDetailsDataSource {
-  final NetworkService networkService;
+  final HiveService hiveService;
 
-  BookDetailsDataSourceImpl(this.networkService);
+  BookDetailsDataSourceImpl(this.hiveService);
 
   @override
   Future<Either<AppException, BookModel>> fetchBookDetails({required String bookId}) async {
     try {
-      final eitherType = await networkService.get(ApiEndpoint.bookDetails(bookId));
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          log("📡 BookDetails API raw: ${response.data}");
-          return Right(BookModel.fromJson(response.data));
-        },
+      final books = await hiveService.getBooks();
+      final book = books.firstWhere(
+            (b) => b.id == bookId,
+        orElse: () => BookModel.empty(),
       );
+      log("📦 Hive BookDetails loaded: ${book.title}");
+      return Right(book);
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to load book details',
         statusCode: 1,
         identifier: '${e.toString()}\nBookDetailsDataSource.fetchBookDetails',
       ));
@@ -43,23 +41,12 @@ class BookDetailsDataSourceImpl implements BookDetailsDataSource {
   @override
   Future<Either<AppException, List<ReviewModel>>> fetchReviews({required String bookId}) async {
     try {
-      final eitherType = await networkService.get(ApiEndpoint.bookReviews(bookId));
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          log("📡 Reviews API raw: ${response.data}");
-          final data = response.data;
-          if (data is List) {
-            return Right(data.map((e) => ReviewModel.fromJson(e)).toList());
-          } else if (data is Map && data['reviews'] is List) {
-            return Right((data['reviews'] as List).map((e) => ReviewModel.fromJson(e)).toList());
-          }
-          return const Right([]);
-        },
-      );
+      // ✅ If reviews are stored in Hive, fetch them here
+      log("📦 Hive Reviews fetched for bookId: $bookId");
+      return const Right([]); // empty fallback
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to load reviews',
         statusCode: 1,
         identifier: '${e.toString()}\nBookDetailsDataSource.fetchReviews',
       ));
@@ -69,23 +56,12 @@ class BookDetailsDataSourceImpl implements BookDetailsDataSource {
   @override
   Future<Either<AppException, List<RatingModel>>> fetchRatings({required String bookId}) async {
     try {
-      final eitherType = await networkService.get(ApiEndpoint.bookRatings(bookId));
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          log("📡 Ratings API raw: ${response.data}");
-          final data = response.data;
-          if (data is List) {
-            return Right(data.map((e) => RatingModel.fromJson(e)).toList());
-          } else if (data is Map && data['ratings'] is List) {
-            return Right((data['ratings'] as List).map((e) => RatingModel.fromJson(e)).toList());
-          }
-          return const Right([]);
-        },
-      );
+      // ✅ If ratings are stored in Hive, fetch them here
+      log("📦 Hive Ratings fetched for bookId: $bookId");
+      return const Right([]); // empty fallback
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to load ratings',
         statusCode: 1,
         identifier: '${e.toString()}\nBookDetailsDataSource.fetchRatings',
       ));
@@ -95,23 +71,12 @@ class BookDetailsDataSourceImpl implements BookDetailsDataSource {
   @override
   Future<Either<AppException, List<RecommendationModel>>> fetchRecommendations({required String bookId}) async {
     try {
-      final eitherType = await networkService.get(ApiEndpoint.bookRecommendations(bookId));
-      return eitherType.fold(
-            (exception) => Left(exception),
-            (response) {
-          log("📡 Recommendations API raw: ${response.data}");
-          final data = response.data;
-          if (data is List) {
-            return Right(data.map((e) => RecommendationModel.fromJson(e)).toList());
-          } else if (data is Map && data['recommendations'] is List) {
-            return Right((data['recommendations'] as List).map((e) => RecommendationModel.fromJson(e)).toList());
-          }
-          return const Right([]);
-        },
-      );
+      // ✅ If recommendations are stored in Hive, fetch them here
+      log("📦 Hive Recommendations fetched for bookId: $bookId");
+      return const Right([]); // empty fallback
     } catch (e) {
       return Left(AppException(
-        message: 'Unknown error occurred',
+        message: 'Failed to load recommendations',
         statusCode: 1,
         identifier: '${e.toString()}\nBookDetailsDataSource.fetchRecommendations',
       ));

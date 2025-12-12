@@ -1,7 +1,4 @@
 import 'package:book_library_app/core/database/hive_storage_services.dart';
-import 'package:book_library_app/core/network/model/dio_network_service.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
-import 'package:book_library_app/core/network/network_service_impl.dart';
 
 // Add Book
 import 'package:book_library_app/features/add_book/data/datasources/book_local_datasources.dart';
@@ -21,6 +18,7 @@ import 'package:book_library_app/features/book_list/data/datasources/book_list_d
 import 'package:book_library_app/features/book_list/data/respositories/book_list_respository_impl.dart';
 import 'package:book_library_app/features/book_list/domain/respositories/book_list_respository.dart';
 import 'package:book_library_app/features/book_list/domain/usecases/book_list_usecases.dart';
+import 'package:book_library_app/features/book_list/presentation/cubit/book_list_cubit.dart';
 
 // Book Search
 import 'package:book_library_app/features/book_search/data/datasources/book_search_datasource.dart';
@@ -41,28 +39,27 @@ final injector = GetIt.instance;
 Future<void> init() async {
   injector
   /// Core Services
-    ..registerLazySingleton<NetworkService>(NetworkServiceImpl.new)
-    ..registerLazySingleton<DioNetworkService>(DioNetworkService.new)
     ..registerLazySingleton<HiveService>(HiveService.new)
 
-  /// Data Sources
+  /// Data Sources (Hive‑only)
     ..registerLazySingleton<BookLocalDataSource>(
           () => BookLocalDataSourceImpl(injector<HiveService>()),
     )
     ..registerLazySingleton<BookDetailsDataSource>(
-          () => BookDetailsDataSourceImpl(injector<NetworkService>()),
+          () => BookDetailsDataSourceImpl(injector<HiveService>()),
     )
     ..registerLazySingleton<BookListDataSource>(
-          () => BookListDataSourceImpl(injector<NetworkService>()),
+          () => BookListDataSourceImpl(injector<HiveService>()),
     )
     ..registerLazySingleton<BookSearchDataSource>(
-          () => BookSearchDataSourceImpl(injector<NetworkService>()),
+          () => BookSearchDataSourceImpl(injector<HiveService>()),
     )
     ..registerLazySingleton<ReadingProgressDataSource>(
-          () => ReadingProgressDataSourceImpl(injector<NetworkService>()),
+          () => ReadingProgressDataSourceImpl(injector<HiveService>()),
     )
 
   /// Repositories
+
     ..registerLazySingleton<AddBookRepository>(
           () => AddBookRepositoryImpl(injector<BookLocalDataSource>()),
     )
@@ -70,10 +67,7 @@ Future<void> init() async {
           () => BookDetailsRepositoryImpl(injector<BookDetailsDataSource>()),
     )
     ..registerLazySingleton<BookListRepository>(
-          () => BookListRepositoryImpl(
-        injector<BookListDataSource>(),
-        injector<HiveService>(),
-      ),
+          () => BookListRepositoryImpl(injector<HiveService>()),
     )
     ..registerLazySingleton<BookSearchRepository>(
           () => BookSearchRepositoryImpl(injector<BookSearchDataSource>()),
@@ -92,7 +86,7 @@ Future<void> init() async {
     ..registerLazySingleton<BookListUseCases>(
           () => BookListUseCases(
         injector<BookListRepository>(),
-        injector<HiveService>(), // ✅ HiveService goes here, not repository
+        injector<HiveService>(),
       ),
     )
     ..registerLazySingleton<SearchBooksUseCase>(
@@ -103,7 +97,6 @@ Future<void> init() async {
     )
 
   /// Cubits
-    ..registerFactory<AddBookCubit>(
-          () => AddBookCubit(injector<AddBookUseCase>()),
-    );
+    ..registerFactory<AddBookCubit>(() => AddBookCubit())
+    ..registerFactory<BookListCubit>(() => BookListCubit());
 }

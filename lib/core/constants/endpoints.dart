@@ -1,24 +1,14 @@
-class ApiEndpoint {
-  // --- Google Books API -------------------------
-  static const String googleApiKey = 'AIzaSyBYKGCB3khC3J08OHLSoytC2_JeXh4QuQw';
+class Endpoints {
+  // ✅ Hive-only storage keys and box names
+  static const String booksBox = 'books_box';
+  static const String usersBox = 'users_box';
+  static const String progressBox = 'progress_box';
 
-  static String searchBooks(String query) =>
-      'https://www.googleapis.com/books/v1/volumes?q=$query&key=$googleApiKey';
-
-  // ✅ Alias for compatibility with DataSource
-  static String getGoogleBooksUrl(String query) =>
-      searchBooks(query);
-
-  static String bookDetails(String bookId) =>
-      'https://www.googleapis.com/books/v1/volumes/$bookId?key=$googleApiKey';
-
-  // --- Local API -------------------------
-  static const String login = 'auth/login';
-  static const String addBook = 'books/add';
-  static const String deleteBook = 'library/delete-book';
-  static String bookRecommendations(String bookId) => 'books/$bookId/recommendations';
-  static String bookReviews(String bookId) => 'books/$bookId/reviews';
-  static String bookRatings(String bookId) => 'books/$bookId/ratings';
-  static String submitProgress(String bookId) => 'books/$bookId/progress';
-  static String getProgress(String bookId, String userId) => 'books/$bookId/progress?userId=$userId';
+  // Optional: define keys for fields if you want consistency
+  static const String bookIdKey = 'book_id';
+  static const String titleKey = 'title';
+  static const String authorKey = 'author';
+  static const String categoryKey = 'category';
+  static const String coverUrlKey = 'cover_url';
+  static const String progressKey = 'progress';
 }

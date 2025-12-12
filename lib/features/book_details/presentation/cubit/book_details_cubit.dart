@@ -2,7 +2,6 @@ import 'dart:developer';
 import 'package:book_library_app/core/exceptions/http_exception.dart';
 import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/core/network/model/either.dart';
-import 'package:book_library_app/core/network/model/network_service.dart';
 import 'package:book_library_app/features/book_details/domain/usecases/book_details_usecases.dart';
 import 'package:book_library_app/features/book_details/data/models/rating_model.dart';
 import 'package:book_library_app/features/book_details/data/models/recommendation_model.dart';
@@ -17,13 +16,11 @@ part 'book_details_state.dart';
 class BookDetailsCubit extends Cubit<BookDetailsState> {
   final BookUseCases _bookUseCases;
   final HiveService _hiveService;
-  final NetworkService _networkService;
 
   bool _cancelled = false;
 
   BookDetailsCubit(this._bookUseCases)
       : _hiveService = GetIt.instance<HiveService>(),
-        _networkService = GetIt.instance<NetworkService>(),
         super(const BookDetailsInitial());
 
   bool get _canEmit => !isClosed && !_cancelled;
@@ -71,21 +68,21 @@ class BookDetailsCubit extends Cubit<BookDetailsState> {
         final reviewsFuture = _bookUseCases
             .fetchReviews(bookId: bookId)
             .timeout(const Duration(seconds: 10), onTimeout: () {
-          log("⏰ Reviews API timed out");
+          log("⏰ Reviews timed out");
           return Right<AppException, List<ReviewModel>>([]);
         });
 
         final ratingsFuture = _bookUseCases
             .fetchRatings(bookId: bookId)
             .timeout(const Duration(seconds: 10), onTimeout: () {
-          log("⏰ Ratings API timed out");
+          log("⏰ Ratings timed out");
           return Right<AppException, List<RatingModel>>([]);
         });
 
         final recommendationsFuture = _bookUseCases
             .fetchRecommendations(bookId: bookId)
             .timeout(const Duration(seconds: 10), onTimeout: () {
-          log("⏰ Recommendations API timed out");
+          log("⏰ Recommendations timed out");
           return Right<AppException, List<RecommendationModel>>([]);
         });
 
@@ -97,7 +94,6 @@ class BookDetailsCubit extends Cubit<BookDetailsState> {
 
         if (!_canEmit) return;
 
-        // Parse results safely with casts
         List<ReviewModel> reviews = [];
         RatingModel? rating;
         List<RecommendationModel> recommendations = [];

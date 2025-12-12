@@ -54,6 +54,18 @@ class BookModel extends HiveObject {
     'category': category,
   };
 
+  /// ✅ Safe fallback factory
+  factory BookModel.empty() {
+    return BookModel(
+      id: '',
+      title: 'Unknown',
+      author: 'Unknown',
+      description: 'No description available',
+      coverUrl: '',
+      category: 'Uncategorized',
+    );
+  }
+
   // Equality based on id so Set/dedup works
   @override
   bool operator ==(Object other) =>

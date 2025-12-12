@@ -4,7 +4,6 @@ import 'package:book_library_app/core/constants/routes.dart';
 import 'package:book_library_app/core/dependency_injection/injector.dart';
 import 'package:book_library_app/features/add_book/domain/usecases/add_book_usecases.dart';
 import 'package:book_library_app/features/add_book/presentation/cubit/add_book_page_cubit.dart';
-import 'package:book_library_app/features/book_list/domain/usecases/book_list_usecases.dart';
 import 'package:book_library_app/features/book_list/presentation/cubit/book_list_cubit.dart';
 import 'package:book_library_app/shared/config/dimens.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
@@ -29,12 +28,10 @@ class _AddBookPageState extends State<AddBookPage> {
   @override
   void initState() {
     super.initState();
-    final addBookUseCase = injector<AddBookUseCase>();
-    final bookListUseCases = injector<BookListUseCases>();
-
-    _addBookCubit = AddBookCubit(addBookUseCase);
-    _bookListCubit = BookListCubit(bookListUseCases);
+    _addBookCubit = AddBookCubit();
+    _bookListCubit = BookListCubit();
   }
+
 
   @override
   Widget build(BuildContext context) {
