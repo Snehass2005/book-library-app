@@ -74,4 +74,23 @@ class BookModel extends HiveObject {
 
   @override
   int get hashCode => id.hashCode;
+
+  /// ✅ Add copyWith for editing
+  BookModel copyWith({
+    String? id,
+    String? title,
+    String? author,
+    String? description,
+    String? coverUrl,
+    String? category,
+  }) {
+    return BookModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      author: author ?? this.author,
+      description: description ?? this.description,
+      coverUrl: coverUrl ?? this.coverUrl,
+      category: category ?? this.category,
+    );
+  }
 }

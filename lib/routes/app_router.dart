@@ -1,3 +1,4 @@
+import 'package:book_library_app/features/book_details/presentation/pages/edit_book_page.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:book_library_app/core/constants/routes.dart';
@@ -50,5 +51,13 @@ final GoRouter router = GoRouter(
         return ReadingProgressPage(bookId: bookId, userId: userId);
       },
     ),
+    GoRoute(
+      path: RoutesName.editBook,
+      builder: (BuildContext context, GoRouterState state) {
+        final book = state.extra as BookModel;
+        return EditBookPage(book: book);
+      },
+    ),
+
   ],
 );

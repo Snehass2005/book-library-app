@@ -4,4 +4,5 @@ class RoutesName {
   static const String search = '/search';
   static const String bookDetails = '/book-details';
   static const String readingProgress = '/reading-progress';
+  static const editBook = '/edit-book';
 }

@@ -1,16 +1,21 @@
 import 'dart:developer';
+import 'package:book_library_app/core/database/hive_storage_services.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:book_library_app/core/dependency_injection/injector.dart';
+import 'package:book_library_app/core/constants/routes.dart';
+import 'package:book_library_app/core/database/storage_services.dart';
+import 'package:book_library_app/features/book_details/domain/usecases/book_details_usecases.dart';
+import 'package:book_library_app/features/book_details/presentation/cubit/book_details_cubit.dart';
 import 'package:book_library_app/features/book_details/data/models/rating_model.dart';
 import 'package:book_library_app/features/book_details/data/models/recommendation_model.dart';
 import 'package:book_library_app/features/book_details/data/models/reveiw_model.dart';
-import 'package:book_library_app/features/book_details/domain/usecases/book_details_usecases.dart';
-import 'package:book_library_app/features/book_details/presentation/cubit/book_details_cubit.dart';
-import 'package:book_library_app/shared/config/dimens.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
 import 'package:book_library_app/shared/theme/app_colors.dart';
 import 'package:book_library_app/shared/theme/text_styles.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:book_library_app/shared/config/dimens.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final BookModel book;
@@ -50,17 +55,9 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             }
           },
           builder: (context, state) {
-            log("📱 UI received state: $state");
-
             if (state is BookDetailsLoadingState) {
-              log("⏳ Showing loading spinner");
-              return Container(
-                color: AppColors.colorSecondary,
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator(),
-              );
+              return const Center(child: CircularProgressIndicator());
             } else if (state is BookDetailsSuccess) {
-              log("🖼 Rendering book: ${state.book.title}");
               return _buildBookDetails(
                 state.book,
                 reviews: state.reviews,
@@ -68,18 +65,12 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 recommendations: state.recommendations,
               );
             } else if (state is BookDetailsLoaded && state.isError) {
-              log("❌ Error state: ${state.errorMessage}");
               return Center(child: Text('Error: ${state.errorMessage}'));
             } else if (state is BookDetailsLoaded && !state.isLoading) {
-              log("⚠️ Fallback: showing widget.book: ${widget.book.title}");
               return _buildBookDetails(widget.book);
             }
 
-            log("⚠️ Unknown state, rendering fallback");
-            return Center(
-              child: Text('Unable to load book details.',
-                  style: AppTextStyles.openSansRegular14),
-            );
+            return const Center(child: Text('Unable to load book details.'));
           },
         ),
       ),
@@ -92,8 +83,6 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
         RatingModel? rating,
         List<RecommendationModel>? recommendations,
       }) {
-    log("🖼 Building details for book: ${book.title}");
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(Dimens.spacing_16),
       child: Column(
@@ -128,26 +117,20 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 const SizedBox(height: Dimens.spacing_4),
                 Text('by ${book.author}', style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_16),
-                Text('Category: ${book.category}',
-                    style: AppTextStyles.openSansRegular14),
+                Text('Category: ${book.category}', style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_24),
                 Text('Description', style: AppTextStyles.openSansBold18),
                 const SizedBox(height: Dimens.spacing_8),
                 Text(book.description, style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_24),
-
-                // Rating
                 Text('Rating', style: AppTextStyles.openSansBold18),
                 const SizedBox(height: Dimens.spacing_8),
                 if (rating != null)
                   Text('⭐ ${rating.average} (${rating.count} ratings)',
                       style: AppTextStyles.openSansRegular14)
                 else
-                  Text('⭐ No ratings yet',
-                      style: AppTextStyles.openSansRegular14),
+                  Text('⭐ No ratings yet', style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_24),
-
-                // Reviews
                 Text('Reviews', style: AppTextStyles.openSansBold18),
                 const SizedBox(height: Dimens.spacing_8),
                 if (reviews != null && reviews.isNotEmpty)
@@ -156,21 +139,15 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(review.reviewer,
-                            style: AppTextStyles.openSansBold14),
-                        Text('"${review.comment}"',
-                            style: AppTextStyles.openSansRegular14),
-                        Text('⭐ ${review.rating}',
-                            style: AppTextStyles.openSansRegular12),
+                        Text(review.reviewer, style: AppTextStyles.openSansBold14),
+                        Text('"${review.comment}"', style: AppTextStyles.openSansRegular14),
+                        Text('⭐ ${review.rating}', style: AppTextStyles.openSansRegular12),
                       ],
                     ),
                   ))
                 else
-                  Text('No reviews yet',
-                      style: AppTextStyles.openSansRegular14),
+                  Text('No reviews yet', style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_24),
-
-                // Recommendations
                 Text('Recommendations', style: AppTextStyles.openSansBold18),
                 const SizedBox(height: Dimens.spacing_8),
                 if (recommendations != null && recommendations.isNotEmpty)
@@ -187,14 +164,46 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                         const Icon(Icons.book, size: 40),
                       ),
                     ),
-                    title: Text(rec.title,
-                        style: AppTextStyles.openSansBold14),
+                    title: Text(rec.title, style: AppTextStyles.openSansBold14),
                     subtitle: Text('by ${rec.author} • ${rec.category}',
                         style: AppTextStyles.openSansRegular12),
                   ))
                 else
                   Text('No recommendations available',
                       style: AppTextStyles.openSansRegular14),
+                const SizedBox(height: Dimens.spacing_24),
+
+                // ✅ Edit & Delete Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await context.push(RoutesName.editBook, extra: book);
+                        _cubit.loadLocalBook(book.id); // ✅ reload from Hive after edit
+                      },
+                      icon: const Icon(Icons.edit, color: Colors.black),
+                      label: const Text('Edit', style: TextStyle(color: Colors.black)),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.colorSecondary),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final hiveService = injector<HiveService>();
+                        final success = await hiveService.deleteBook(book.id);
+                        if (success) {
+                          context.pop(); // go back to list
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Failed to delete book')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.delete, color: Colors.black),
+                      label: const Text('Delete', style: TextStyle(color: Colors.black)),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.colorRed),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
