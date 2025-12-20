@@ -38,6 +38,7 @@ class _BookFormState extends State<BookForm> {
         description: _descriptionController.text.trim(),
         coverUrl: _coverUrlController.text.trim(),
         category: _categoryController.text.trim(),
+        createdAt: DateTime.now(), // ✅ capture current time
       );
 
       await widget.onSubmit(book);

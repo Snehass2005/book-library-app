@@ -16,6 +16,7 @@ import 'package:book_library_app/shared/models/book_model.dart';
 import 'package:book_library_app/shared/theme/app_colors.dart';
 import 'package:book_library_app/shared/theme/text_styles.dart';
 import 'package:book_library_app/shared/config/dimens.dart';
+import 'package:intl/intl.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final BookModel book;
@@ -118,6 +119,18 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 Text('by ${book.author}', style: AppTextStyles.openSansRegular14),
                 const SizedBox(height: Dimens.spacing_16),
                 Text('Category: ${book.category}', style: AppTextStyles.openSansRegular14),
+                const SizedBox(height: Dimens.spacing_24),
+                Text(
+                  'Created on: ${DateFormat('dd MMM yyyy, hh:mm a').format(book.createdAt)}',
+                  style: AppTextStyles.openSansRegular12,
+                ),
+                if (book.updatedAt != null) ...[
+                  const SizedBox(height: Dimens.spacing_8),
+                  Text(
+                    'Last updated: ${DateFormat('dd MMM yyyy, hh:mm a').format(book.updatedAt!)}',
+                    style: AppTextStyles.openSansRegular12.copyWith(color: AppColors.greyText),
+                  ),
+                ],
                 const SizedBox(height: Dimens.spacing_24),
                 Text('Description', style: AppTextStyles.openSansBold18),
                 const SizedBox(height: Dimens.spacing_8),

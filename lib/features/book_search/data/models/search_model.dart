@@ -23,6 +23,10 @@ class BookSearchModel extends HiveObject {
   @HiveField(5)
   final String category;
 
+  @HiveField(6)
+  final DateTime createdAt;
+
+
   BookSearchModel({
     required this.id,
     required this.title,
@@ -30,6 +34,7 @@ class BookSearchModel extends HiveObject {
     required this.coverUrl,
     required this.description,
     required this.category,
+    required this.createdAt,
   });
 
   factory BookSearchModel.fromJson(Map<String, dynamic> json) {
@@ -40,7 +45,8 @@ class BookSearchModel extends HiveObject {
       author: (volumeInfo['authors'] as List?)?.join(', ') ?? 'Unknown',
       coverUrl: volumeInfo['imageLinks']?['thumbnail'] ?? '',
       description: volumeInfo['description'] ?? 'No description available',
-      category: volumeInfo['categories']?.first ?? 'Uncategorized',
+      category: (volumeInfo['categories'] as List?)?.first ?? 'Uncategorized',
+      createdAt: DateTime.now(), // ✅ add timestamp
     );
   }
 
@@ -52,6 +58,7 @@ class BookSearchModel extends HiveObject {
       coverUrl: coverUrl,
       description: description,
       category: category,
+      createdAt: createdAt,
     );
   }
 }

@@ -1,4 +1,6 @@
 import 'dart:developer';
+import 'package:book_library_app/core/constants/routes.dart';
+import 'package:book_library_app/shared/config/book_sort_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +26,8 @@ class _BookListPageState extends State<BookListPage> {
   @override
   void initState() {
     super.initState();
-    _bookListCubit = BookListCubit()..loadBooks();
+    _bookListCubit = BookListCubit()
+      ..loadBooks(sortType: BookSortType.category); // ✅ default sort
   }
 
   @override
@@ -45,7 +48,10 @@ class _BookListPageState extends State<BookListPage> {
           actions: [
             IconButton(
               icon: const Icon(Icons.search),
-              onPressed: () => context.push('/book-search', extra: widget.currentUserId),
+              onPressed: () => context.push(
+                RoutesName.search, // use the constant for consistency
+                extra: {'currentUserId': widget.currentUserId}, // ✅ pass as Map
+              ),
             ),
           ],
         ),
@@ -61,10 +67,7 @@ class _BookListPageState extends State<BookListPage> {
               return const Center(child: CircularProgressIndicator());
             } else if (state is BookListSuccess) {
               if (state.books.isEmpty) return const Center(child: Text('No books found'));
-              return RefreshIndicator(
-                onRefresh: () => _bookListCubit.refreshBooks(),
-                child: _buildBookList(state.books),
-              );
+              return _buildBookList(state.books);
 
             } else if (state is BookListError) {
               final books = state.books;
@@ -87,25 +90,39 @@ class _BookListPageState extends State<BookListPage> {
   Widget _buildBookList(List<BookModel> books) {
     final Map<String, List<BookModel>> groupedBooks = {};
 
+    // Group books by category
     for (var book in books) {
       final category = book.category.trim().isEmpty ? 'Uncategorized' : book.category.trim();
       groupedBooks.putIfAbsent(category, () => []).add(book);
     }
 
-    final categories = groupedBooks.entries.map((entry) {
+    // ✅ Sort categories alphabetically
+    final categories = groupedBooks.entries.toList()
+      ..sort((a, b) => a.key.toLowerCase().compareTo(b.key.toLowerCase()));
+
+    // ✅ Sort books inside each category
+    final sortedCategories = categories.map((entry) {
+      final sortedBooks = List<BookModel>.from(entry.value);
+
+      // Example: sort by createdAt (newest first)
+      sortedBooks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // If you want alphabet sort inside category instead:
+      sortedBooks.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+
       return {
         'title': entry.key,
-        'count': entry.value.length,
+        'count': sortedBooks.length,
         'description': 'Explore books in ${entry.key}',
-        'books': entry.value,
+        'books': sortedBooks,
       };
     }).toList();
 
     return ListView.builder(
       padding: const EdgeInsets.all(Dimens.spacing_16),
-      itemCount: categories.length,
+      itemCount: sortedCategories.length,
       itemBuilder: (context, index) {
-        final category = categories[index];
+        final category = sortedCategories[index];
         return Card(
           elevation: Dimens.elevation_2,
           margin: const EdgeInsets.symmetric(vertical: Dimens.spacing_12),

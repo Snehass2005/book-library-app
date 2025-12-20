@@ -22,6 +22,12 @@ class BookModel extends HiveObject {
   @HiveField(5)
   final String category;
 
+  @HiveField(6)
+  final DateTime createdAt;
+
+  @HiveField(7)
+  final DateTime? updatedAt;
+
   BookModel({
     required this.id,
     required this.title,
@@ -29,6 +35,9 @@ class BookModel extends HiveObject {
     required this.description,
     required this.coverUrl,
     required this.category,
+    required this.createdAt,
+    this.updatedAt,
+
   });
 
   factory BookModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +51,7 @@ class BookModel extends HiveObject {
           ?? info['imageLinks']?['smallThumbnail']
           ?? '',
       category: (info['categories'] as List?)?.first ?? 'Uncategorized',
+      createdAt: DateTime.now(),
     );
   }
 
@@ -52,9 +62,9 @@ class BookModel extends HiveObject {
     'description': description,
     'coverUrl': coverUrl,
     'category': category,
+    'createdAt': createdAt.toIso8601String(),
   };
 
-  /// ✅ Safe fallback factory
   factory BookModel.empty() {
     return BookModel(
       id: '',
@@ -63,10 +73,10 @@ class BookModel extends HiveObject {
       description: 'No description available',
       coverUrl: '',
       category: 'Uncategorized',
+      createdAt: DateTime.now(),
     );
   }
 
-  // Equality based on id so Set/dedup works
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -75,7 +85,6 @@ class BookModel extends HiveObject {
   @override
   int get hashCode => id.hashCode;
 
-  /// ✅ Add copyWith for editing
   BookModel copyWith({
     String? id,
     String? title,
@@ -83,6 +92,8 @@ class BookModel extends HiveObject {
     String? description,
     String? coverUrl,
     String? category,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -91,6 +102,9 @@ class BookModel extends HiveObject {
       description: description ?? this.description,
       coverUrl: coverUrl ?? this.coverUrl,
       category: category ?? this.category,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+
     );
   }
 }

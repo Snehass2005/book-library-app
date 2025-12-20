@@ -26,6 +26,7 @@ class BookSearchDataSourceImpl implements BookSearchDataSource {
         coverUrl: b.coverUrl,
         description: b.description,
         category: b.category,
+        createdAt: b.createdAt,
       ))
           .toList();
 

@@ -112,6 +112,7 @@ class HiveService implements StorageService {
           description: book.description,
           coverUrl: 'https://covers.openlibrary.org/b/id/10523338-L.jpg', // fallback image
           category: book.category,
+          createdAt: book.createdAt,
         );
       }
 
@@ -126,10 +127,17 @@ class HiveService implements StorageService {
     try {
       final values = bookBox.values.toList();
       final index = values.indexWhere((b) => b.id == book.id);
+
       if (index == -1) return false;
-      await bookBox.putAt(index, book);
+
+      // ✅ Always update the timestamp when editing
+      final updatedBook = book.copyWith(
+        updatedAt: DateTime.now(),
+      );
+
+      await bookBox.putAt(index, updatedBook);
       return true;
-    } catch (_) {
+    } catch (e) {
       return false;
     }
   }
@@ -179,6 +187,7 @@ Future<void> seedSampleBooks(HiveService hiveService) async {
         description: 'Intro to Flutter development',
         coverUrl: 'https://picsum.photos/200/300',
         category: 'Computers',
+        createdAt: DateTime.now(), // ✅ required field
       ),
       BookModel(
         id: '2',
@@ -187,6 +196,7 @@ Future<void> seedSampleBooks(HiveService hiveService) async {
         description: 'Classic novel',
         coverUrl: 'https://covers.openlibrary.org/b/id/7222246-L.jpg',
         category: 'Fiction',
+        createdAt: DateTime.now(), // ✅ required field
       ),
       BookModel(
         id: '3',
@@ -195,6 +205,7 @@ Future<void> seedSampleBooks(HiveService hiveService) async {
         description: 'Guide to data science tools',
         coverUrl: 'https://covers.openlibrary.org/b/id/8231856-L.jpg',
         category: 'Technology',
+        createdAt: DateTime.now(), // ✅ required field
       ),
     ];
 

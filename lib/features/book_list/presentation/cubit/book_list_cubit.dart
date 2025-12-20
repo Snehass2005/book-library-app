@@ -1,6 +1,7 @@
 // lib/features/book_list/presentation/cubit/book_list_cubit.dart
 import 'dart:developer';
 import 'package:bloc/bloc.dart';
+import 'package:book_library_app/shared/config/book_sort_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
@@ -13,25 +14,46 @@ class BookListCubit extends Cubit<BookListState> {
 
   BookListCubit({HiveService? hiveService})
       : _hiveService = hiveService ?? injector<HiveService>(),
-        super(BookListInitial());
-  Future<void> loadBooks() async {
+        super(BookListInitial()) {
+    // ✅ Listen for changes in the Hive box
+    _hiveService.bookBox.watch().listen((event) async {
+      final books = _hiveService.bookBox.values.toList();
+      // Optional: sort newest first
+      books.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      emit(BookListSuccess(books: books));
+    });
+  }
+
+
+  Future<void> loadBooks({BookSortType sortType = BookSortType.alphabet}) async {
     emit(BookListLoading());
     try {
       final books = _hiveService.bookBox.values.toList();
 
-      // ✅ Add this loop here to debug each book
-      for (final book in books) {
-        log('📘 ${book.title} → ${book.coverUrl}');
+      switch (sortType) {
+        case BookSortType.alphabet:
+          books.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+          break;
+
+        case BookSortType.createdAt:
+          books.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // newest first
+          break;
+
+        case BookSortType.category:
+          books.sort((a, b) {
+            final categoryCompare = a.category.toLowerCase().compareTo(b.category.toLowerCase());
+            if (categoryCompare != 0) return categoryCompare;
+            return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+          });
+          break;
       }
 
-      log('📦 Hive books loaded: ${books.length}');
       emit(BookListSuccess(books: books));
     } catch (e) {
-      log('❌ Load error: $e');
       emit(BookListError(errorMessage: 'Failed to load books', books: []));
     }
   }
-  Future<void> refreshBooks() async => loadBooks();
+
 
   Future<void> deleteBook(String bookId) async {
     final current = state;
