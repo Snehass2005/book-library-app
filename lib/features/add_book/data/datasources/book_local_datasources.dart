@@ -4,7 +4,7 @@ import 'package:book_library_app/core/network/model/either.dart';
 import 'package:book_library_app/core/database/hive_storage_services.dart';
 
 /// Local datasource for managing books in Hive.
-/// Only supports fetching all books and adding a new book.
+/// Supports fetching all books, adding, and updating.
 abstract class BookLocalDataSource {
   Future<Either<AppException, List<BookModel>>> getAllBooks();
   Future<Either<AppException, void>> addBook({required BookModel book});
@@ -37,15 +37,8 @@ class BookLocalDataSourceImpl implements BookLocalDataSource {
     try {
       // ✅ Ensure coverUrl is valid before saving
       if (book.coverUrl.isEmpty || !book.coverUrl.startsWith('http')) {
-        book = BookModel(
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          description: book.description,
+        book = book.copyWith(
           coverUrl: 'https://covers.openlibrary.org/b/id/10523338-L.jpg', // fallback image
-          category: book.category,
-          createdAt: book.createdAt,
-          updatedAt: book.updatedAt, // ✅ preserve if exists
         );
       }
 

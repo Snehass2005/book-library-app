@@ -18,14 +18,14 @@ class AddBookCubit extends Cubit<AddBookState> {
     final currentState = state;
     if (currentState is AddBookLoaded) {
       emit(currentState.copyWith(isLoading: true));
-      log("📤 Adding book '${book.title}' to Hive");
+      log("📤 Adding book '${book.title}' (Category: ${book.category}) to Hive"); // ✅ include category
 
       try {
         final existingBooks = await _hiveService.getBooks();
         existingBooks.add(book);
         await _hiveService.setBooks(existingBooks);
 
-        log("✅ Saved to Hive: ${book.title}, category: '${book.category}'");
+        log("✅ Saved to Hive: ${book.title}, Category: ${book.category}"); // ✅ include category
         emit(AddBookSuccess(book));
       } catch (e) {
         log("❌ Hive save error: $e");

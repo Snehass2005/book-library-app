@@ -1,1 +1,1 @@
-enum BookSortType { alphabet, createdAt, category }
+enum BookSortType { alphabetAZ, alphabetZA, createdAt, updatedAt }

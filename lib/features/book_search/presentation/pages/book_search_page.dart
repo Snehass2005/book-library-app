@@ -34,10 +34,14 @@ class _BookSearchPageState extends State<BookSearchPage> {
       create: (_) => _searchCubit,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Search Books', style: AppTextStyles.openSansBold20),
-          backgroundColor: AppColors.colorSecondary,
-        ),
-        body: Padding(
+      title: const Text('Search Books'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context); // ✅ Go back to BookListPage
+        },
+      ),),
+      body: Padding(
           padding: const EdgeInsets.all(Dimens.spacing_16),
           child: BlocConsumer<BookSearchCubit, BookSearchState>(
             listener: (context, state) {

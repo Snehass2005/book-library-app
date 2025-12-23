@@ -37,7 +37,9 @@ class _BookFormState extends State<BookForm> {
         author: _authorController.text.trim(),
         description: _descriptionController.text.trim(),
         coverUrl: _coverUrlController.text.trim(),
-        category: _categoryController.text.trim(),
+        category: _categoryController.text.trim().isEmpty
+            ? 'Uncategorized' // ✅ fallback if empty
+            : _categoryController.text.trim(),
         createdAt: DateTime.now(), // ✅ capture current time
       );
 
@@ -68,15 +70,19 @@ class _BookFormState extends State<BookForm> {
               value == null || value.isEmpty ? 'Please enter an author' : null,
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description'),
-              maxLines: 3,
-            ),
+          TextFormField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(labelText: 'Description'),
+            maxLines: 3,
+            validator: (value) =>
+            value == null || value.trim().isEmpty ? 'Please enter a description' : null,
+          ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _coverUrlController,
               decoration: const InputDecoration(labelText: 'Cover Image URL'),
+              validator: (value) =>
+              value == null || value.trim().isEmpty ? 'Please enter a cover image URL' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -88,6 +94,8 @@ class _BookFormState extends State<BookForm> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+              validator: (value) =>
+              value == null || value.trim().isEmpty ? 'Please enter a category' : null,
             ),
             const SizedBox(height: 20),
             ElevatedButton(

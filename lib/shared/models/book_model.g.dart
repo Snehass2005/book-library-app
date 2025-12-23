@@ -22,7 +22,7 @@ class BookModelAdapter extends TypeAdapter<BookModel> {
       author: fields[2] as String,
       description: fields[3] as String,
       coverUrl: fields[4] as String,
-      category: fields[5] as String,
+      category: fields[5] as String,          // ✅ restored category
       createdAt: fields[6] as DateTime,
       updatedAt: fields[7] as DateTime?,
     );
@@ -31,7 +31,7 @@ class BookModelAdapter extends TypeAdapter<BookModel> {
   @override
   void write(BinaryWriter writer, BookModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(8)                          // ✅ total number of fields
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -43,7 +43,7 @@ class BookModelAdapter extends TypeAdapter<BookModel> {
       ..writeByte(4)
       ..write(obj.coverUrl)
       ..writeByte(5)
-      ..write(obj.category)
+      ..write(obj.category)                   // ✅ restored category
       ..writeByte(6)
       ..write(obj.createdAt)
       ..writeByte(7)
@@ -56,7 +56,7 @@ class BookModelAdapter extends TypeAdapter<BookModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is BookModelAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+          other is BookModelAdapter &&
+              runtimeType == other.runtimeType &&
+              typeId == other.typeId;
 }

@@ -1,9 +1,8 @@
-// lib/features/book_list/presentation/cubit/book_list_cubit.dart
 import 'dart:developer';
 import 'package:bloc/bloc.dart';
+import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/shared/config/book_sort_type.dart';
 import 'package:equatable/equatable.dart';
-import 'package:book_library_app/core/database/hive_storage_services.dart';
 import 'package:book_library_app/shared/models/book_model.dart';
 import 'package:book_library_app/core/dependency_injection/injector.dart';
 
@@ -18,32 +17,34 @@ class BookListCubit extends Cubit<BookListState> {
     // ✅ Listen for changes in the Hive box
     _hiveService.bookBox.watch().listen((event) async {
       final books = _hiveService.bookBox.values.toList();
-      // Optional: sort newest first
-      books.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      books.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // newest first
       emit(BookListSuccess(books: books));
     });
   }
 
-
-  Future<void> loadBooks({BookSortType sortType = BookSortType.alphabet}) async {
+  Future<void> loadBooks({BookSortType sortType = BookSortType.alphabetAZ}) async {
     emit(BookListLoading());
     try {
       final books = _hiveService.bookBox.values.toList();
 
       switch (sortType) {
-        case BookSortType.alphabet:
+        case BookSortType.alphabetAZ:
           books.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+          break;
+
+        case BookSortType.alphabetZA:
+          books.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
           break;
 
         case BookSortType.createdAt:
           books.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // newest first
           break;
 
-        case BookSortType.category:
+        case BookSortType.updatedAt:
           books.sort((a, b) {
-            final categoryCompare = a.category.toLowerCase().compareTo(b.category.toLowerCase());
-            if (categoryCompare != 0) return categoryCompare;
-            return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            final aTime = a.updatedAt ?? a.createdAt;
+            final bTime = b.updatedAt ?? b.createdAt;
+            return bTime.compareTo(aTime); // newest edit first
           });
           break;
       }
@@ -53,7 +54,6 @@ class BookListCubit extends Cubit<BookListState> {
       emit(BookListError(errorMessage: 'Failed to load books', books: []));
     }
   }
-
 
   Future<void> deleteBook(String bookId) async {
     final current = state;
@@ -73,11 +73,13 @@ class BookListCubit extends Cubit<BookListState> {
     try {
       final all = await _hiveService.getBooks();
       final q = query.toLowerCase();
-      final filtered = all.where((b) =>
-      b.title.toLowerCase().contains(q) ||
-          b.author.toLowerCase().contains(q) ||
-          b.category.toLowerCase().contains(q)
-      ).toList();
+
+      // ✅ Match only if the title starts with the query
+      final filtered = all.where((b) {
+        final titleLower = b.title.toLowerCase();
+        return titleLower.startsWith(q);
+      }).toList();
+
       emit(BookListSuccess(books: filtered));
     } catch (e) {
       emit(BookListError(errorMessage: 'Search failed', books: []));

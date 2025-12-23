@@ -41,7 +41,17 @@ class BookSearchCubit extends Cubit<BookSearchState> {
           );
         },
             (books) {
-          emit(BookSearchSuccess(books));
+          final queryLower = query.toLowerCase();
+
+          // ✅ Stricter filtering: only match if title/author starts with query
+          final filtered = books.where((book) {
+            final titleLower = book.title.toLowerCase();
+            final authorLower = book.author.toLowerCase();
+            return titleLower.startsWith(queryLower) ||
+                authorLower.startsWith(queryLower);
+          }).toList();
+
+          emit(BookSearchSuccess(filtered));
         },
       );
     }
