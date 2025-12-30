@@ -7,7 +7,6 @@ import 'package:book_library_app/shared/models/book_model.dart';
 import 'package:book_library_app/core/dependency_injection/injector.dart';
 
 part 'book_list_state.dart';
-
 class BookListCubit extends Cubit<BookListState> {
   final HiveService _hiveService;
 
@@ -21,12 +20,15 @@ class BookListCubit extends Cubit<BookListState> {
       emit(BookListSuccess(books: books));
     });
   }
-
-  Future<void> loadBooks({BookSortType sortType = BookSortType.alphabetAZ}) async {
+  Future<void> loadBooks({BookSortType sortType = BookSortType.alphabetAZ, bool includeDeleted = false}) async {
     emit(BookListLoading());
     try {
-      final books = _hiveService.bookBox.values.toList();
+      // ✅ Filter deleted books unless includeDeleted is true
+      final books = _hiveService.bookBox.values
+          .where((b) => includeDeleted || b.isDeleted != true)
+          .toList();
 
+      // ✅ Apply sorting
       switch (sortType) {
         case BookSortType.alphabetAZ:
           books.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
@@ -55,29 +57,35 @@ class BookListCubit extends Cubit<BookListState> {
     }
   }
 
+  // ✅ Proper Hive delete
   Future<void> deleteBook(String bookId) async {
     final current = state;
     final currentBooks = current is BookListSuccess ? current.books : <BookModel>[];
     emit(BookListLoading());
     try {
-      final updated = currentBooks.where((b) => b.id != bookId).toList();
-      await _hiveService.setBooks(updated);
+      final book = _hiveService.bookBox.get(bookId);
+      if (book != null) {
+        final updatedBook = book.copyWith(isDeleted: true); // ✅ mark deleted
+        await _hiveService.bookBox.put(bookId, updatedBook);
+      }
+      final updated = _hiveService.bookBox.values.toList();
       emit(BookListSuccess(books: updated));
     } catch (e) {
       emit(BookListError(errorMessage: 'Failed to delete book', books: currentBooks));
     }
   }
 
-  Future<void> searchBooks(String query) async {
+  // ✅ Improved search (matches anywhere in title)
+  Future<void> searchBooks(String query, {bool includeDeleted = false}) async {
     emit(BookListLoading());
     try {
       final all = await _hiveService.getBooks();
       final q = query.toLowerCase();
 
-      // ✅ Match only if the title starts with the query
       final filtered = all.where((b) {
-        final titleLower = b.title.toLowerCase();
-        return titleLower.startsWith(q);
+        final matches = b.title.toLowerCase().contains(q);
+        final visible = includeDeleted || b.isDeleted != true;
+        return matches && visible;
       }).toList();
 
       emit(BookListSuccess(books: filtered));

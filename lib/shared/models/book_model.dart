@@ -28,15 +28,19 @@ class BookModel extends HiveObject {
   @HiveField(7)
   final DateTime? updatedAt;
 
+  @HiveField(8)
+  final bool isDeleted; // ✅ new soft delete flag
+
   BookModel({
     required this.id,
     required this.title,
     required this.author,
     required this.description,
     required this.coverUrl,
-    required this.category,   // ✅ required again
+    required this.category,
     required this.createdAt,
     this.updatedAt,
+    this.isDeleted = false, // ✅ default not deleted
   });
 
   factory BookModel.fromJson(Map<String, dynamic> json) {
@@ -49,8 +53,10 @@ class BookModel extends HiveObject {
       coverUrl: info['imageLinks']?['thumbnail']
           ?? info['imageLinks']?['smallThumbnail']
           ?? '',
-      category: (info['categories'] as List?)?.first ?? 'Uncategorized', // ✅ restored
+      category: (info['categories'] as List?)?.first ?? 'Uncategorized',
       createdAt: DateTime.now(),
+      updatedAt: null,
+      isDeleted: false, // ✅ new books are not deleted
     );
   }
 
@@ -60,9 +66,10 @@ class BookModel extends HiveObject {
     'author': author,
     'description': description,
     'coverUrl': coverUrl,
-    'category': category,   // ✅ restored
+    'category': category,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt?.toIso8601String(),
+    'isDeleted': isDeleted, // ✅ include in JSON if needed
   };
 
   factory BookModel.empty() {
@@ -72,8 +79,10 @@ class BookModel extends HiveObject {
       author: 'Unknown',
       description: 'No description available',
       coverUrl: '',
-      category: 'Uncategorized',   // ✅ restored
+      category: 'Uncategorized',
       createdAt: DateTime.now(),
+      updatedAt: null,
+      isDeleted: false,
     );
   }
 
@@ -91,9 +100,10 @@ class BookModel extends HiveObject {
     String? author,
     String? description,
     String? coverUrl,
-    String? category,   // ✅ restored
+    String? category,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isDeleted, // ✅ copy isDeleted
   }) {
     return BookModel(
       id: id ?? this.id,
@@ -101,9 +111,10 @@ class BookModel extends HiveObject {
       author: author ?? this.author,
       description: description ?? this.description,
       coverUrl: coverUrl ?? this.coverUrl,
-      category: category ?? this.category,   // ✅ restored
+      category: category ?? this.category,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 }
